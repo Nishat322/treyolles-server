@@ -40,7 +40,6 @@ app.get('/', (req, res) => {
   res.send('Hello, world!');
 });
 
-//Step one simulate data
 const cards = [{
     id: 1,
     title: 'Task One',
@@ -51,6 +50,36 @@ const lists = [{
     header: 'List One',
     cardIds: [1]
 }];
+
+app.get('/cards',(req,res)=>{
+    res.json(cards);
+});
+
+app.get('/card/:id',(req,res)=>{
+    const {id} = req.params;
+    const card = cards.find(c=> c.id == id);
+
+    if(!card){
+        logger.error(`Card with id ${id} not found`);
+        return res.status(404).send('Card Not Found');
+    }
+    res.json(card);
+});
+
+app.get('/lists',(req,res) => {
+    res.json(lists);
+});
+
+app.get('/list/:id',(req,res)=>{
+    const {id} = req.params;
+    const list = lists.find(l => l.id == id);
+
+    if(!list){
+        logger.error(`List with id ${id} not found`);
+        return res.status(404).send('List Not Found');
+    }
+    res.json(list);
+});
 
 app.use(function errorHandler(error, req, res, next) {
   let response;
