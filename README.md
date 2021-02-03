@@ -1,3 +1,4 @@
-#Treyolles Server
+# Treyolles Server
 
-- endpoints for cards and lists
+- GET, POST, DELETE endpoints for card
+- GET, POST, DELETE endpoints for list 
