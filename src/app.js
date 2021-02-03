@@ -1,3 +1,4 @@
+/* eslint-disable eqeqeq */
 /* eslint-disable indent */
 'use strict';
 require('dotenv').config();
@@ -7,6 +8,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const { NODE_ENV } = require('./config');
 const { transports } = require('winston');
+const {v4:uuid} = require('uuid');
 
 const app = express();
 
@@ -23,6 +25,7 @@ if (NODE_ENV !== 'production'){
 } 
 app.use(cors());
 app.use(helmet());
+app.use(express.json());
 
 
 app.use(function validateBearerToken(req,res,next) {
@@ -66,6 +69,35 @@ app.get('/card/:id',(req,res)=>{
     res.json(card);
 });
 
+app.post('/card',(req,res)=>{
+    const {title,content} =req.body;
+    if(!title){
+        logger.error('Title is required');
+        return res.status(400).send('Invalid Data');
+    }
+    if(!content){
+        logger.error('Content is required');
+        return res.status(400).send('Invalid Data');
+    }
+
+    const id = uuid();
+
+    const newCard={
+        id,
+        title,
+        content
+    };
+
+    cards.push(newCard);
+
+    logger.info(`Card with id ${id} created`);
+    res
+        .status(201)
+        .location(`http://localhost:8000/card/${id}`)
+        .json(newCard);
+
+});
+
 app.get('/lists',(req,res) => {
     res.json(lists);
 });
@@ -79,6 +111,33 @@ app.get('/list/:id',(req,res)=>{
         return res.status(404).send('List Not Found');
     }
     res.json(list);
+});
+
+app.post('/list',(req,res)=>{
+    const {header,cardIds} = req.body;
+    if(!header){
+        logger.error('Header is required');
+        return res.status(400).send('Invalid Data');
+    }
+    if(!cardIds){
+        logger.error('CardId is required');
+        return res.status(400).send('Invalid Data');
+    }
+
+    const id = uuid();
+
+    const newList={
+        id,
+        header,
+        cardIds
+    };
+
+    lists.push(newList);
+    logger.info(`New List with id ${id} created`);
+    res
+        .status(201)
+        .location(`http://localhost:8000/list/${id}`)
+        .json(newList);
 });
 
 app.use(function errorHandler(error, req, res, next) {
