@@ -54,7 +54,7 @@ const lists = [{
     cardIds: [1]
 }];
 
-app.get('/cards',(req,res)=>{
+app.get('/card',(req,res)=>{
     res.json(cards);
 });
 
@@ -98,7 +98,27 @@ app.post('/card',(req,res)=>{
 
 });
 
-app.get('/lists',(req,res) => {
+//must also delete card from list
+app.delete('/card/:id',(req,res)=>{
+    const {id} = req.params;
+    const cardIndex =cards.findIndex( c=> c.id == id);
+
+    if(cardIndex === -1){
+        logger.error(`Card with id ${id} not found`);
+        return res.status(404).send('Not Found');
+    }
+
+    lists.forEach(list =>{
+        const cardIds = list.cardIds.filter(cid => cid !== id);
+        list.cardIds = cardIds;
+    });
+    cards.splice(cardIndex, 1);
+
+    logger.info(`Card with id ${id} deleted`);
+    res.status(204).end();
+});
+
+app.get('/list',(req,res) => {
     res.json(lists);
 });
 
@@ -119,9 +139,21 @@ app.post('/list',(req,res)=>{
         logger.error('Header is required');
         return res.status(400).send('Invalid Data');
     }
-    if(!cardIds){
-        logger.error('CardId is required');
-        return res.status(400).send('Invalid Data');
+    if (cardIds.length > 0) {
+        let valid = true;
+        cardIds.forEach(cid => {
+          const card = cards.find(c => c.id == cid);
+          if (!card) {
+            logger.error(`Card with id ${cid} not found in cards array.`);
+            valid = false;
+          }
+        });
+    
+        if (!valid) {
+          return res
+            .status(400)
+            .send('Invalid data');
+        }
     }
 
     const id = uuid();
@@ -138,6 +170,21 @@ app.post('/list',(req,res)=>{
         .status(201)
         .location(`http://localhost:8000/list/${id}`)
         .json(newList);
+});
+
+app.delete('/list/:id',(req,res)=>{
+    const {id} =req.params;
+    const listIndex = lists.findIndex(l => l.id == id);
+    
+    if(listIndex === -1){
+        logger.error(`List with id ${id} not found`);
+        return res.status(400).send('Not Found');
+    }
+
+    lists.splice(listIndex, 1);
+
+    logger.info(`List with id ${id} delted`);
+    res.status(204).end();
 });
 
 app.use(function errorHandler(error, req, res, next) {
